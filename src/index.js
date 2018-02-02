@@ -42,18 +42,25 @@ import {
 	Comment,
 	Responsive
 } from "semantic-ui-react";
+import { isNull } from "util";
+
+
+
+var currentSearchPath	="";
 
 class WidgetWithCards extends React.Component {
 	constructor(props) {
 		super(props);
 		this.handleFilterChange = this.handleFilterChange.bind(this);
 		this.handleRefresh = this.handleRefresh.bind(this);
+		this.gotoParentFolder = this.gotoParentFolder.bind(this);
 		this.handleApplyFilters = this.handleApplyFilters.bind(this);
 		this.resetFilters = this.resetFilters.bind(this);
 		this.handleKeepOpened = this.handleKeepOpened.bind(this);
 		this.handleSearchSideBar = this.handleSearchSideBar.bind(this);
 		this.handleKeyPress = this.handleKeyPress.bind(this);
 
+ 
 		this.state = {
 			page_to_fetch: 0,
 			loadingresults: false,
@@ -64,6 +71,7 @@ class WidgetWithCards extends React.Component {
 			keepOpened: false,
 			query: "",
 			resultCount: "No search started",
+			resultJSON: null,
 			articles: {
 				status: "ok",
 				source: "abc-news-au",
@@ -73,12 +81,44 @@ class WidgetWithCards extends React.Component {
 			allCards: <div />,
 			newCards: <div />
 		};
+
 	}
+
+	onCardSelected(searchPath) {
+        // parent class change handler is always called with field name and value
+	
+	
+    }
 
 	componentDidMount() {
 		this.handleRefresh();
 	}
-	handleRefresh(e) {
+	gotoParentFolder(){
+		this.handleRefresh("\/");
+		
+	}
+
+	handleRefresh(searchpath) {
+
+	switch(searchpath) {
+		case "\/": 
+		currentSearchPath = currentSearchPath.substr(0, currentSearchPath.lastIndexOf("\/"));
+		console.log (currentSearchPath);
+		break
+
+		case undefined: 
+		currentSearchPath = ""; 
+		break
+
+		default:  
+		currentSearchPath = currentSearchPath + "/" + searchpath ;
+	}
+	
+	
+	
+
+		 
+		  console.log(currentSearchPath);
 		this.setState({ page_to_fetch: ++this.state.page_to_fetch });
 
 		// console.log(this.state.allCards);
@@ -97,25 +137,31 @@ class WidgetWithCards extends React.Component {
 			)
 		}));
 
-		execute_fetch(this.state.query, this.state.page_to_fetch).then(
+		execute_fetch(currentSearchPath, this.state.query, this.state.page_to_fetch).then(
 			function(data) {
 			
 				this.setState({
-					resultCount: data.resultCount + " result(s...)"
+					resultCount: data.resultCount + " result(s)",
+					resultJSON:  data.items
 				});
-
+				
+				console.log(data.items);
 				var previousCard = this.state.allCards;
-
+				
 				var cardsHTML = (
 					<Card.Group unstackable={true} divided={true}>
 						{this.state.loadingresults ? (
-							data.items.map(item => (
+							this.state.resultJSON.map(item => (
 								<CardExpandable
+								callbackParent={(searchPath) => this.handleRefresh(searchPath) }
+								
 									fluid
 									key={item._id}
 									formattedItem={item}
 									rawItem={item.rawItem}
+									basename={item.basename}
 									iconName={item.iconName}
+									itemType={item.itemType}
 									iconColor={item.iconColor}
 									mediaType={item.mediaType}
 									thumbnail={item.thumbnail}
@@ -328,10 +374,13 @@ class WidgetWithCards extends React.Component {
 					<Label size="small" color="grey">
 						{this.state.resultCount}
 					</Label>
+					<Button onClick={this.handleRefresh} size="tiny"> <Icon name='refresh' /></Button>
+					<Button onClick={this.gotoParentFolder} size="tiny"> <Icon name='arrow up' /></Button>
 				</Divider>
 
 				<Sidebar.Pushable style={{ height: "100%" }}>
 					<Sidebar
+
 						animation="overlay"
 						direction="right"
 						style={{
@@ -392,6 +441,9 @@ class WidgetWithCards extends React.Component {
 		);
 	}
 }
+
+
+
 class App extends React.Component {
 	render() {
 		return (

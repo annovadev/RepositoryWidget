@@ -1,6 +1,7 @@
 import React from "react";
 import { render } from "react-dom";
 import { CardsContextMenu } from "./CardsContextMenu.js";
+import { getFileStream } from "./fetch.js";
 import {
 	Dropdown,
 	Icon,
@@ -18,6 +19,7 @@ export class CardExpandable extends React.Component {
 		this.handleMouseEnter = this.handleMouseEnter.bind(this);
 		this.handleMouseLeave = this.handleMouseLeave.bind(this);
 		this.handleDragStart = this.handleDragStart.bind(this);
+		
 		this.handleClick = this.handleClick.bind(this);
 		this.state = {
 			expanded: false,
@@ -29,12 +31,25 @@ export class CardExpandable extends React.Component {
 		};
 	}
 	handleClick(e) {
+		
+
+	if(this.props.itemType == "directory"){	
+		this.props.callbackParent(this.props.basename);
+	}else { 
+	//	alert("File selected");
+		getFileStream(this.props.basename);
+	}
+
+
+	//	window.open(this.props.open_url);
 		e.preventDefault();
-		console.log(this.props.formattedItem.open_url);
-		window.open(this.props.formattedItem.open_url, "_blank");
+	
+	//	console.log(this.props.formattedItem.open_url);
+	
 	}
 
 	handleExpand(e) {
+		
 		e.preventDefault();
 		if (this.state.expanded == false) {
 			this.setState({
@@ -54,11 +69,13 @@ export class CardExpandable extends React.Component {
 			});
 		}
 	}
+
 	handleDragStart(e) {
 		e.dataTransfer.setData("text/plain", this.props.dragAndDropString);
 	}
 
 	handleMouseEnter(e) {
+	
 		this.setState({
 			isHovered: ""
 		});
@@ -68,18 +85,81 @@ export class CardExpandable extends React.Component {
 			isHovered: "none"
 		});
 	}
+	onDateChange(dateValue) {
+        // for a date field, the value is passed into the change handler
+		this.props.onCardSelected('dateCommenced', dateValue);
+	
+    }
 
 	render() {
 	
 		let thumbnail = null;
 		let mediaNode = null;
 		let iconNode = null;
-		if (this.props.iconName != "") {
-			iconNode = (
-				<Icon name={this.props.iconName} color={this.props.iconColor} />
+	
+	
+	
+		let mediaType = String(this.props.mediaType);
+		switch (true){
+			case mediaType.startsWith('image'):
+			thumbnail = (
+				<Image
+					style={{
+						cursor: "zoom-in"
+					}}
+					floated="left"
+					src={this.props.thumbnail}
+					size="mini"
+				/>
 			);
-		}
-		if (this.props.mediaType == "image") {
+			mediaNode = <Image centered src={this.props.highres} />;
+			break;
+
+			case mediaType.startsWith('video'): 
+			
+			thumbnail = <Icon link size="big" name="video" />;
+	
+				mediaNode = (
+					<video width="100%" autoPlay controls>
+						<source src={this.props.highres} type="video/mp4" />
+						Your browser does not support HTML5 video.
+					</video>
+				);
+			
+			break;
+			case mediaType.startsWith('audio'):
+		
+				//thumbnail = <Button floated="left" content="Play" icon="play" />;
+				thumbnail = <Icon  size="big" name="volume up" />;
+				mediaNode = (
+					<audio style={{ width: "100%" }} autoPlay controls>
+						<source src={this.props.highres} type="audio/mp3" />
+						Your browser does not support HTML5 audio.
+					</audio>
+				)
+				break;
+			default:
+			switch(this.props.itemType) {
+				case "file":
+				thumbnail = <Icon link size="big" name="file" />;
+				mediaNode = (
+					<iframe style={{ width: "100%" }} src={this.props.highres}/>
+				)
+					break;
+				case "directory":
+				thumbnail = <Icon link size="big" name="folder" color="yellow" />;
+					break;
+				default:
+				thumbnail = <Icon link size="big" name="file" />;
+			}
+	
+	
+			}
+
+
+		
+
+	/*	if (mediaType.startsWith('image', 0)) {
 			thumbnail = (
 				<Image
 					style={{
@@ -93,9 +173,20 @@ export class CardExpandable extends React.Component {
 			mediaNode = <Image centered src={this.props.highres} />;
 		}
 
-		if (this.props.mediaType == "video") {
+		if (mediaType.startsWith('video', 0)) {
 			if (this.props.thumbnail == null) {
-				thumbnail = <Icon link size="big" name="play circle" />;
+				thumbnail = <Icon
+				style={{
+					position: "absolute",
+					top: "50%",
+					left: "50%",
+					transform: "translate(-50%, -50%)"
+				}}
+				inverted
+				size="big"
+				color=""
+				name="play circle"
+			/>
 			} else {
 				thumbnail = (
 					<Image floated="left" size="tiny" onClick={e => e.preventDefault()}>
@@ -123,7 +214,7 @@ export class CardExpandable extends React.Component {
 				</video>
 			);
 		}
-		if (this.props.mediaType == "audio") {
+		if (mediaType.startsWith('audio', 0)) {
 			//thumbnail = <Button floated="left" content="Play" icon="play" />;
 			thumbnail = <Icon link size="big" name="volume up" />;
 			mediaNode = (
@@ -132,10 +223,11 @@ export class CardExpandable extends React.Component {
 					Your browser does not support HTML5 audio.
 				</audio>
 			);
-		}
+		}*/
 
 		return (
 			<Card
+			onCardSelected={this.onDateChange.bind(this)}  
 				link
 				color=""
 				centered
@@ -143,19 +235,20 @@ export class CardExpandable extends React.Component {
 				onDragStart={this.handleDragStart}
 				onMouseEnter={this.handleMouseEnter}
 				onMouseLeave={this.handleMouseLeave}
+				onClick={this.handleClick}
 				style={{ margin: "0px" }}
 				{...this.props}>
 				<Card.Content>
 					<Modal closeIcon="close" trigger={thumbnail} size="small">
-						<Modal.Header>{this.props.title}</Modal.Header>
-						<Modal.Content>{mediaNode}</Modal.Content>
+					<Modal.Header>{this.props.title}</Modal.Header>
+					<Modal.Content>{mediaNode}</Modal.Content>
 					</Modal>
 					<CardsContextMenu
 						formattedItem={this.props.formattedItem}
 						rawItem={this.props.rawItem}
 					
 					/>
-					{iconNode}
+					
 					<strong onClick={this.handleClick}>{this.props.title}</strong>
 					<Card.Meta dangerouslySetInnerHTML={{ __html: this.props.meta }} />
 					<Card.Description
@@ -174,3 +267,5 @@ export class CardExpandable extends React.Component {
 		);
 	}
 }
+
+

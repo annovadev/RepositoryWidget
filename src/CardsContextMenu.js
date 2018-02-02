@@ -2,7 +2,7 @@ import React from "react";
 import { render } from "react-dom";
 import { CardsCornerPopup, ModalViewButtons } from "./actions_new";
 
-import { Dropdown, Icon } from "semantic-ui-react";
+import {   Dropdown,  Icon,  Button,  Modal } from "semantic-ui-react";
 
 "use strict";
 

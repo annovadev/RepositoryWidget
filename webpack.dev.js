@@ -69,7 +69,7 @@ module.exports = merge(common, {
   
         // JSon file handling
         // * Enables you to 'require'/'import' json files from your JS files
-     //   {	test: /\.json$/, loader: 'json-loader' },
+        {	test: /\.json$/, loader: 'json-loader' },
         {
           test: /\.js$/,
           exclude: /node_modules/,
@@ -85,8 +85,6 @@ module.exports = merge(common, {
   },
 
   externals: {
-//    fs:    "commonjs fs",
-//    path:  "commonjs path",
 
    "react": "React",
    "react-dom": "ReactDOM",
@@ -114,7 +112,9 @@ module.exports = merge(common, {
     }),*/
 //    new BundleAnalyzer()
   ],
-  
+  node: {
+    fs: "empty"
+  },
   
   devServer: {
     host: "0.0.0.0",

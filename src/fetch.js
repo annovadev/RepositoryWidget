@@ -1,148 +1,120 @@
+
 import TimeAgo from "javascript-time-ago";
 // Load locale-specific relative date/time formatting rules.
 import en from "javascript-time-ago/locale/en";
+
+var converter = require('byte-converter').converterBase10;
 var AppSettings = require('./settings.json'); 
+var createClient = require("webdav");
+var proxyURL = "http://om24md:3000/fetch/";
+var webDavBaseURL = 'http://openmedia24/testwebdavfolder/'  
+var client = createClient(proxyURL+webDavBaseURL,    "administrator",    "Annova124");
+ 
+export function getFileStream(filename){
+//alert(filename);
+//	window.open(webDavBaseURL+filename)
+}
 
-export function execute_fetch(query, page) {
-	var tokenpromise = new Promise(function(resolve, reject) {
+export function execute_fetch(searchpath, query, page) {
+ if (query == ""){
 	
-		var user = AppSettings.fetch.username;
-		var password = AppSettings.fetch.password;
-		var loginURL = AppSettings.fetch.url;
-		var tok = user + ":" + password;
-		var hash = btoa(tok);
-		var today = new Date();
+return client.getDirectoryContents(searchpath)
+ 
+        .then(responseData => {
+			console.log(responseData);
+		return buildStandardJSON(responseData,"");
+	
 
-		if (
-			localStorage.getItem("medox_access_token") === null ||
-			localStorage.getItem("medox_access_token_expiry_date") < today.getTime()
-		) {
-			fetch(loginURL, {
-				method: "GET",
-				headers: {
-					Authorization: "Basic " + hash,
-					Accept: "application/json"
-				}
-			})
-				.then(response => response.json())
-				.then(data => {
-					localStorage.setItem("medox_access_token", data.access_token);
-					var expiryDateTimeMS = today.getTime() + data.expires_in * 1000;
-					localStorage.setItem(
-						"medox_access_token_expiry_date",
-						expiryDateTimeMS
-					);
-					console.log(data.access_token);
-					resolve(data.access_token);
-				})
-				.catch(error => console.warn(error));
-		} else {
-			resolve(localStorage.getItem("medox_access_token"));
-		}
-	});
-
-	//one we have a valid token, we actually execute the fetch
-	return tokenpromise.then(function(token) {
-        //console.log(token);
-      
-		var searchURL =
-			"https://demo.medox.scisys.de:8443/dira6/api/v10/search/contentItems";
-
-		return fetch(searchURL, {
-			method: "POST",
-			headers: {
-				Authorization: "Bearer " + token,
-				Accept: "application/json",
-				"Content-Type": "application/json"
-			},
-			body: JSON.stringify({
-				query: {
-					bool: {
-						must: [{ index: { meta: query + " " } }],
-						filter: [{ term: { status: "valid" } }]
-					}
-				},
-				from: 1,
-				size: 20,
-				sort: [{ modTime: { order: "desc" } }]
-			})
 		})
-			.then(response => response.json())
-			.then(responseData => {
-		//		console.log(responseData);
+		
+		.catch(error => console.warn(error));
+}
+else {
+	return client.getSearchDirectoryContents(searchpath)
+	
+	.then(responseData => {
+	//	console.log(responseData);
+	var results = [];
+	var searchField = "basename";
+	var searchVal = query;
+		for (var i=0 ; i < responseData.length ; i++){
+		
+			var regex = new RegExp(query);
+			var matchesRegex = regex.test(responseData[i][searchField]);
+			if (matchesRegex) {
+				results.push(responseData[i]);
+			}
 
-				TimeAgo.locale(en);
-				const timeAgo = new TimeAgo("en-US");
+			
+   		
+	}
+	return buildStandardJSON(results,query);
 
-				var len = responseData.contentItems.length,
-					//newData = { resultCount: responseData.count, items: [] },
-					newData = { resultCount: responseData.count, items: [] },
-					i;
-		//		console.log(len);
+	
+	//	console.log(results);
+	
+})
+}
+}
 
-				//Loop through the source JSON and format it into the standard format
-				for (i = 0; i < len; i += 1) {
-					newData.items.push({
-						id: responseData.contentItems[i]._id,
-						key: responseData.contentItems[i]._id,
-						rawItem: responseData.contentItems[i],
-						title: responseData.contentItems[i].mainTitle,
-						open_url: "https://demo.medox.scisys.de:8443/",
-						description:
-							"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
 
-						target: "_blank",
-						iconName: responseData.contentItems[i].hasOwnProperty("images")
-							? "image"
-							: responseData.contentItems[i].hasOwnProperty("videos")
-								? "film"
-								: "volume up",
-						iconColor: responseData.contentItems[i].hasOwnProperty("images")
-							? "green"
-							: responseData.contentItems[i].hasOwnProperty("videos")
-								? "blue"
-								: "red",
-						mediaType: responseData.contentItems[i].hasOwnProperty("images")
-							? "image"
-							: responseData.contentItems[i].hasOwnProperty("videos")
-								? "video"
-								: "audio",
 
-						thumbnail: responseData.contentItems[i].hasOwnProperty("images")
-							? responseData.contentItems[i].images[0].variants[0].url
-							: responseData.contentItems[i].hasOwnProperty("videos")
-								? "https://react.semantic-ui.com/assets/images/image-16by9.png"
-								: null,
-						highres: responseData.contentItems[i].hasOwnProperty("images")
-							? responseData.contentItems[i].images[0].variants[0].url
-							: responseData.contentItems[i].hasOwnProperty("videos")
-								? responseData.contentItems[i].videos[0].variants[0].url
-								: responseData.contentItems[i].audios[0].variants[1].url,
 
-						dragAndDropString:
-							"<mos><mosID>DIRA.DEMO.AUDIO.MOS</mosID>" +
-							"<objID>" +
-							responseData.contentItems[i]._id +
-							"</objID>" +
-							"<objSlug>" +
-							responseData.contentItems[i].mainTitle +
-							"</objSlug>" +
-							"<objTB>48000</objTB> <objDur>497664</objDur>" +
-							"<mosAbstract>" +
-							responseData.contentItems[i].mainType.displayName +
-							"</mosAbstract></mos>",
 
-						meta:
-							responseData.contentItems[i].mainType.displayName +
-							"&nbsp;&middot;&nbsp" +
-							responseData.contentItems[i].creaUser +
-							"&nbsp;&middot;&nbsp" +
-							timeAgo.format(new Date(responseData.contentItems[i].creaTime))
-					});
-				}
-				//console.log(JSON.stringify(newData));
-				return newData;
-			})
-			.catch(error => console.warn(error));
-	});
+function buildStandardJSON(responseData,query) {
+	console.log(responseData);
+	TimeAgo.locale(en);
+	const timeAgo = new TimeAgo("en-US");
+	var len = responseData.length;
+ //  console.log("Array len:"+len);
+	 var	i;
+	 var z = 0;
+	var	newData = { resultCount: responseData.length, items: [] };
+	// get rid of the current directory - otherwise listed in search ...
+	if (query == ""){
+		z = 1;
+	}
+	
+
+	//Loop through the source JSON and format it into the standard format
+
+	for (i = z; i < len; i += 1) {
+      console.log(responseData[i].filename);
+	try{
+		let absolutePath = responseData[i].filename;
+		absolutePath = absolutePath.replace("../","");
+		//console.log(absolutePath);
+
+		newData.items.push({
+			key: responseData[i].filename,
+			rawItem: responseData[i].filename,
+			title: responseData[i].basename,
+			basename: responseData[i].basename,
+	//		description: responseData[i].basename,
+			target: "_blank",
+			open_url: webDavBaseURL + responseData[i].filename,
+			highres: webDavBaseURL + responseData[i].filename,
+			itemType: responseData[i].type,
+			mediaType: responseData[i].mime,
+			author: responseData[i].filename,
+			source: responseData[i].filename,
+			thumbnail: webDavBaseURL + responseData[i].filename,
+			meta:
+	//		Math.round(converter(responseData[i].size, 'B', 'MB'),-2) +
+			converter(responseData[i].size, 'B', 'MB')+
+			"&nbsp;&middot;&nbsp" +
+			timeAgo.format(new Date(responseData[i].lastmod))
+		
+
+		});
+	}
+		catch(e)
+		{
+		console.log("Error occoured fetching a value from JSON:" + e)
+		}	
+	
+
+	}
+
+	return newData;
 }

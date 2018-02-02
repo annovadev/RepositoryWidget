@@ -4,8 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --inline --hot --history-api-fallback --open --config webpack.dev.js",
-    "build": "webpack --display-error-details --config webpack.prod.js"
+    "start": "webpack-dev-server --inline --hot --history-api-fallback --open  --config webpack.dev.js",
+    "build": "webpack --display-error-details --config webpack.prod.js",
+    "dev": "webpack-super-dev-server -p 9000 -h"
   },
   "repository": {
     "type": "git",
@@ -19,11 +20,17 @@
   },
   "homepage": "https://github.com/mdalkaya/NBSearchWidget-Boilerplate#readme",
   "dependencies": {
+    "browserify-fs": "^1.0.0",
+    "byte-converter": "^0.1.4",
     "javascript-time-ago": "^1.0.21",
+    "json-filter": "0.0.2",
     "lodash": "^4.17.4",
+    "node-readfiles": "^0.2.0",
     "react": "^15.4.2",
     "react-dom": "^15.4.2",
-    "semantic-ui-react": "^0.77.2"
+    "semantic-ui-react": "^0.77.2",
+    "webdav": "^1.1.1",
+    "webdav-client": "^1.4.0"
   },
   "devDependencies": {
     "babel-core": "^6.23.1",

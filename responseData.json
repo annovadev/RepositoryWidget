@@ -1,0 +1,255 @@
+{
+"filepath": "\\orion\Users\mdalkaya",
+"name": "mdalkaya",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/.gitconfig",
+"name": ".gitconfig",
+"type": "file",
+"filetype": false
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/Einrichtung FB und Twitter auf SMG.docx",
+"name": "Einrichtung FB und Twitter auf SMG.docx",
+"type": "file",
+"filetype": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib",
+"name": "OMWebPluginLib",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common",
+"name": "common",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common/api.d.ts",
+"name": "api.d.ts",
+"type": "file",
+"filetype": "video/mp2t"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common/api.js",
+"name": "api.js",
+"type": "file",
+"filetype": "application/javascript"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common/api.js.map",
+"name": "api.js.map",
+"type": "file",
+"filetype": "application/json"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common/api.ts",
+"name": "api.ts",
+"type": "file",
+"filetype": "video/mp2t"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common/index.d.ts",
+"name": "index.d.ts",
+"type": "file",
+"filetype": "video/mp2t"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common/index.js",
+"name": "index.js",
+"type": "file",
+"filetype": "application/javascript"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common/index.js.map",
+"name": "index.js.map",
+"type": "file",
+"filetype": "application/json"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/common/index.ts",
+"name": "index.ts",
+"type": "file",
+"filetype": "video/mp2t"
+}
+],
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost",
+"name": "omhost",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost/api.d.ts",
+"name": "api.d.ts",
+"type": "file",
+"filetype": "video/mp2t"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost/api.js",
+"name": "api.js",
+"type": "file",
+"filetype": "application/javascript"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost/api.js.map",
+"name": "api.js.map",
+"type": "file",
+"filetype": "application/json"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost/api.ts",
+"name": "api.ts",
+"type": "file",
+"filetype": "video/mp2t"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost/channel.d.ts",
+"name": "channel.d.ts",
+"type": "file",
+"filetype": "video/mp2t"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost/channel.js",
+"name": "channel.js",
+"type": "file",
+"filetype": "application/javascript"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost/channel.js.map",
+"name": "channel.js.map",
+"type": "file",
+"filetype": "application/json"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omhost/channel.ts",
+"name": "channel.ts",
+"type": "file",
+"filetype": "video/mp2t"
+}
+],
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omplugin",
+"name": "omplugin",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omplugin/index.d.ts",
+"name": "index.d.ts",
+"type": "file",
+"filetype": "video/mp2t"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omplugin/index.js",
+"name": "index.js",
+"type": "file",
+"filetype": "application/javascript"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omplugin/index.js.map",
+"name": "index.js.map",
+"type": "file",
+"filetype": "application/json"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/OMWebPluginLib/omplugin/index.ts",
+"name": "index.ts",
+"type": "file",
+"filetype": "video/mp2t"
+}
+],
+}
+],
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/Solution Architect",
+"name": "Solution Architect",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/Solution Architect/Templates",
+"name": "Templates",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/Solution Architect/Templates/Groups and Roles.vsdx",
+"name": "Groups and Roles.vsdx",
+"type": "file",
+"filetype": false
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/Solution Architect/Templates/New folder",
+"name": "New folder",
+"type": "folder",
+"children": [],
+}
+],
+}
+],
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/Test.txt",
+"name": "Test.txt",
+"type": "file",
+"filetype": "text/plain"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/TestFolder",
+"name": "TestFolder",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/TestFolder/file1.txt",
+"name": "file1.txt",
+"type": "file",
+"filetype": "text/plain"
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/TestFolder/SubFolder",
+"name": "SubFolder",
+"type": "folder",
+"children": [],
+}
+],
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/WINDOWS",
+"name": "WINDOWS",
+"type": "folder",
+"children": [
+  {
+"filepath": "\\orion\Users\mdalkaya/WINDOWS/New Microsoft Visio Drawing.vsdx",
+"name": "New Microsoft Visio Drawing.vsdx",
+"type": "file",
+"filetype": false
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/WINDOWS/system",
+"name": "system",
+"type": "folder",
+"children": [],
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/WINDOWS/test123.txt",
+"name": "test123.txt",
+"type": "file",
+"filetype": "text/plain"
+}
+],
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/wRestore000.con",
+"name": "wRestore000.con",
+"type": "file",
+"filetype": false
+},
+  {
+"filepath": "\\orion\Users\mdalkaya/XXXXX.txt",
+"name": "XXXXX.txt",
+"type": "file",
+"filetype": "text/plain"
+}
+],
+}
