@@ -99,6 +99,7 @@ function buildStandardJSON(responseData,query) {
 			author: responseData[i].filename,
 			source: responseData[i].filename,
 			thumbnail: webDavBaseURL + responseData[i].filename,
+		
 			meta:
 	//		Math.round(converter(responseData[i].size, 'B', 'MB'),-2) +
 			converter(responseData[i].size, 'B', 'MB')+
