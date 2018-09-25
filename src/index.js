@@ -1,5 +1,5 @@
 import React from "react";
-import { execute_fetch } from "./fetch.js";
+import { fetch_getList,fetch_getRepositories,fetch_getFile } from "./fetch.js";
 
 import { CardExpandable } from "./CardExpandable.js";
 import { render } from "react-dom";
@@ -41,25 +41,33 @@ import {
 	Feed,
 	Comment,
 	Responsive
-} from "semantic-ui-react";
+} from "semantic-ui-react/dist/commonjs";
 import { isNull } from "util";
 
 
 
 var currentSearchPath	="";
+var repIx = 0;
+var nodeId = "";
+var selectedFile = "";
+let folderID = null;
 
 class WidgetWithCards extends React.Component {
 	constructor(props) {
 		super(props);
 		this.handleFilterChange = this.handleFilterChange.bind(this);
 		this.handleRefresh = this.handleRefresh.bind(this);
+		this.handleStartSearch = this.handleStartSearch.bind(this);
 		this.gotoParentFolder = this.gotoParentFolder.bind(this);
 		this.handleApplyFilters = this.handleApplyFilters.bind(this);
 		this.resetFilters = this.resetFilters.bind(this);
 		this.handleKeepOpened = this.handleKeepOpened.bind(this);
 		this.handleSearchSideBar = this.handleSearchSideBar.bind(this);
 		this.handleKeyPress = this.handleKeyPress.bind(this);
-
+		this.handleSetRepository = this.handleSetRepository.bind(this);
+		this.onCardSelected = this.onCardSelected.bind(this);
+		this.onCardSelected2 = this.onCardSelected2.bind(this);
+		this.handleDownload = this.handleDownload.bind(this);
  
 		this.state = {
 			page_to_fetch: 0,
@@ -68,6 +76,7 @@ class WidgetWithCards extends React.Component {
 			keepOpened: false,
 			filtersHaveChanged: false,
 			filterButtonColor: null,
+			downloadDisabled : true,
 			keepOpened: false,
 			query: "",
 			resultCount: "No search started",
@@ -78,47 +87,134 @@ class WidgetWithCards extends React.Component {
 				sortBy: "top",
 				articles: ""
 			},
+			repositories: 	[],
+			currentFolder: null,
+			parentFolder: null,
+			filterOps : [],
 			allCards: <div />,
 			newCards: <div />
 		};
 
 	}
+	onCardSelected(itemType, id) {
+	
 
-	onCardSelected(searchPath) {
+		if(itemType == "folder"){	
+	
+			this.setState(prevState => ({
+				currentFolder: id,
+				downloadDisabled: true
+			}));
+		this.handleRefresh(id) 
+		}
+		else { 
+			this.setState(prevState => ({
+				downloadDisabled: false
+			}));
+	//	this.handleDownload(id);
+		}
+	
+
+	}
+	onCardSelected2(itemType, id) {
         // parent class change handler is always called with field name and value
+	//folderID = id;
+		if(itemType == "folder"){	
+			console.log("Folder selected: " + searchPath);
+			this.setState(prevState => ({
+				downloadDisabled: true
+			}));
+
+
+			switch(searchPath) {
+				case "..": 
+				currentSearchPath = currentSearchPath.substr(0, currentSearchPath.lastIndexOf("\/"));
+				
+				break;
+				case "\\.": 
+				var singleSlash = /\//;
+				currentSearchPath = singleSlash;//currentSearchPath.substr(0, currentSearchPath.lastIndexOf("\/"));
+		
+				default: 
+				currentSearchPath = currentSearchPath + "\/" + searchPath; 
+				break;
+		
+			  
+				
+				
+			}
+
+			this.handleRefresh();		
+		} else { 
+			this.setState(prevState => ({
+				downloadDisabled: false
+			}));
+			selectedFile = currentSearchPath + "/" + searchPath;
+	//		console.log("File selected: " + currentSearchPath + "/" + searchPath);
+		
+			
+		}
+//		console.log("Current Searchpath: " + currentSearchPath);
+
 	
-	
-    }
+	}
 
 	componentDidMount() {
-		this.handleRefresh();
+
+		fetch_getRepositories().then(
+				function(data) {
+					this.setState(prevState => ({
+						repositories: data
+					}));
+					nodeId = this.state.repositories[repIx].nodeId;
+				
+				}.bind(this));
+			
+// Start with default Repository set in api.config or Repository = 1 
+		
+
+
+			this.handleRefresh();
 	}
 	gotoParentFolder(){
 		this.handleRefresh("\/");
 		
 	}
+	handleSetRepository(event,data)	{
+	//	currentSearchPath = "\/";
+		
+		repIx = data.value;
+		console.log(repIx);
+		nodeId = this.state.repositories[repIx].nodeId;
+		console.log("Repository Index: " + repIx + " Node ID: "+ nodeId)
+		folderID = "";
+		this.handleRefresh();
+		
 
-	handleRefresh(searchpath) {
-
-	switch(searchpath) {
-		case "\/": 
-		currentSearchPath = currentSearchPath.substr(0, currentSearchPath.lastIndexOf("\/"));
-		console.log (currentSearchPath);
-		break
-
-		case undefined: 
-		currentSearchPath = ""; 
-		break
-
-		default:  
-		currentSearchPath = currentSearchPath + "/" + searchpath ;
 	}
-	
-	
-	
 
-		 
-		  console.log(currentSearchPath);
+	handleDownload(event,data) {
+		console.log("Selected file or folder: "+ event)
+	//	fetch_api_download(event).then(
+		fetch_getList(nodeId, currentSearchPath, this.state.query).then(
+					function(data) {
+
+					}.bind(this)
+				);
+		
+	}
+	handleStartSearch(e) {
+		console.log("Selected file or folder: "+ e)
+		
+		if (typeof e == 'undefined'){
+			folderID = '';
+		}
+			else{
+				folderID = e;	
+		}
+			
+		console.log("Query: "+e);	
+	
 		this.setState({ page_to_fetch: ++this.state.page_to_fetch });
 
 		// console.log(this.state.allCards);
@@ -136,16 +232,19 @@ class WidgetWithCards extends React.Component {
 				</div>
 			)
 		}));
-
-		execute_fetch(currentSearchPath, this.state.query, this.state.page_to_fetch).then(
+	
+		fetch_getList(nodeId,folderID,query).then(
+	//	fetch_getList(repProtocol, repositoryID, currentSearchPath, this.state.query).then(
 			function(data) {
 			
 				this.setState({
 					resultCount: data.resultCount + " result(s)",
-					resultJSON:  data.items
+					resultJSON:  data.items,
+					parentFolder: data.parentFolderId
 				});
 				
 				console.log(data.items);
+				console.log("PARENT FOLDER:" +data.parentFolderId);
 				var previousCard = this.state.allCards;
 				
 				var cardsHTML = (
@@ -153,10 +252,96 @@ class WidgetWithCards extends React.Component {
 						{this.state.loadingresults ? (
 							this.state.resultJSON.map(item => (
 								<CardExpandable
-								callbackParent={(searchPath) => this.handleRefresh(searchPath) }
-								
+								callbackParent={(itemType, key) => this.onCardSelected(itemType, key)}
+								//	callbackParent={(itemType, searchPath) => this.onCardSelected2(itemType,searchPath)}
 									fluid
-									key={item._id}
+									id={item.id}
+									formattedItem={item}
+									rawItem={item.rawItem}
+									basename={item.basename}
+									iconName={item.iconName}
+									itemType={item.itemType}
+									iconColor={item.iconColor}
+									mediaType={item.mediaType}
+									thumbnail={item.thumbnail}
+									highres={item.highres}
+									description={item.description}
+									title={item.title}
+									open_url={item.open_url}
+									dragAndDropString={item.dragAndDropString}
+									target={item.target}
+									meta={item.meta}
+								/>
+							))
+						) : (
+							<Loader active />
+						)}
+					</Card.Group>
+				);
+
+				this.setState(prevState => ({
+					allCards: <div>{cardsHTML}</div>
+				}));
+			}.bind(this)
+		);
+
+	}
+
+	handleRefresh(e) {
+		console.log("Selected file or folder: "+ e)
+		
+		if (typeof e == 'undefined'){
+			folderID = "";
+		}
+			else{
+				folderID = e;	
+		}
+			
+		let query = "";
+		query = this.state.query;
+		
+		this.setState({ page_to_fetch: ++this.state.page_to_fetch });
+
+		// console.log(this.state.allCards);
+
+		this.setState({
+			loadingresults: true,
+			resultCount: "Searching..."
+		});
+
+		this.setState(prevState => ({
+			allCards: (
+				<div>
+					{" "}
+					<Loader active />
+				</div>
+			)
+		}));
+		
+
+		fetch_getList(nodeId,folderID,query).then(
+	//	fetch_getList(repProtocol, repositoryID, currentSearchPath, this.state.query).then(
+			function(data) {
+			
+				this.setState({
+					resultCount: data.resultCount + " result(s)",
+					resultJSON:  data.items,
+					parentFolder: data.parentFolderId
+				});
+				
+				console.log(data.items);
+				console.log("PARENT FOLDER:" +data.parentFolderId);
+				var previousCard = this.state.allCards;
+				
+				var cardsHTML = (
+					<Card.Group unstackable={true} divided={true}>
+						{this.state.loadingresults ? (
+							this.state.resultJSON.map(item => (
+								<CardExpandable
+								callbackParent={(itemType, key) => this.onCardSelected(itemType, key)}
+								//	callbackParent={(itemType, searchPath) => this.onCardSelected2(itemType,searchPath)}
+									fluid
+									id={item.id}
 									formattedItem={item}
 									rawItem={item.rawItem}
 									basename={item.basename}
@@ -224,28 +409,56 @@ class WidgetWithCards extends React.Component {
 		});
 	}
 	handleKeyPress(e) {
-		if (e.charCode == 13) {
-			this.handleRefresh();
-			console.log(this.state.query);
+
+		if (e.data == null){
+			this.setState((prevState, props) => ({
+				query: ""
+			  }));
 		}
+		else{
+			this.setState((prevState, props) => ({
+				query: e.data
+			  }));
+		}
+
+	
+	
+		if (e.charCode == 13) {
+		
+			this.handleRefresh(this.state.query);
+		}
+	
+
 	}
 
 	render() {
+	
+
 		let panels = [
 			{
 				active: true,
 				title: {
-					key: "sort",
+					key: "sort_key",
 					children: (
-						<Header as="h4" dividing>
-							<Header.Content>
-								<Icon name="list" />View
-							</Header.Content>
-						</Header>
+						<List selection>
+							{" "}
+							<List.Item  onClick={() => this.setState({ sortKey: 'score' })} active >
+								<List.Icon name="arrow down" />
+								<List.Content>Name</List.Content>
+							</List.Item>
+							<List.Item  onClick={() => this.setState({ sortKey: 'title' })} active >
+								<List.Icon />
+								<List.Content>Type</List.Content>
+							</List.Item>
+							<List.Item  onClick={() => this.setState({ sortKey: 'creation' })} active >
+								<List.Icon  name=""/>
+								<List.Content>Size</List.Content>
+							</List.Item>
+						</List>
 					)
 				},
 				content: {
-					key: "sortContent",
+					key: "fields_key",
 					children: (
 						<div>
 							Fields
@@ -263,11 +476,15 @@ class WidgetWithCards extends React.Component {
 							Layout
 							<List selection>
 								{" "}
+								<List.Item active>
+									<List.Icon name="" />
+									<List.Content>Card</List.Content>
+								</List.Item>
 								<List.Item>
 									<List.Icon name="" />
 									<List.Content>Grid</List.Content>
 								</List.Item>
-								<List.Item active>
+								<List.Item>
 									<List.Icon name="check" />
 									<List.Content>List</List.Content>
 								</List.Item>
@@ -352,7 +569,14 @@ class WidgetWithCards extends React.Component {
 		return (
 			<div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
 				<div style={{ margin: "5px", flex: "0" }}>
+
+
+
 					<Input
+				
+					 labelPosition='left'
+					 placeholder='Repository'
+
 						onChange={(e, data) => {
 							this.setState({ query: data.value });
 						}}
@@ -370,12 +594,28 @@ class WidgetWithCards extends React.Component {
 					/>
 				</div>
 
+				<div style={{ margin: "5px", flex: "0" }}>
+				<Menu>
+    <Dropdown item simple text=' '  icon='folder open' label={{ color: 'blue', empty: true, circular: true }} onChange={this.handleSetRepository}  direction='right' options={this.state.repositories}  />
+    
+   
+	<Button icon='home' onClick={() => this.onCardSelected("folder","")}/>
+	<Button icon='arrow up' onClick={() => this.onCardSelected("folder",this.state.parentFolder)}/>
+	<Button icon='refresh' onClick={() => this.handleRefresh(this.state.currentFolder)}/>
+	<Button icon='download' disabled={this.state.downloadDisabled}  onClick={() => this.handleDownload('XERva3VcSm9ubnlcQWRtaW5pc3RyYXRpb25fT3Blbk1lZGlhLmRvY3g')}/>		
+  
+  </Menu>
+				
+			</div>
+
+
+
 				<Divider horizontal fitted>
 					<Label size="small" color="grey">
 						{this.state.resultCount}
 					</Label>
-					<Button onClick={this.handleRefresh} size="tiny"> <Icon name='refresh' /></Button>
-					<Button onClick={this.gotoParentFolder} size="tiny"> <Icon name='arrow up' /></Button>
+
+		
 				</Divider>
 
 				<Sidebar.Pushable style={{ height: "100%" }}>

@@ -9,7 +9,6 @@ import {
 	Image,
 	Modal,
 	Button,
-	Checkbox,
 	Container
 } from "semantic-ui-react";
 
@@ -20,7 +19,6 @@ export class CardExpandable extends React.Component {
 		this.handleMouseEnter = this.handleMouseEnter.bind(this);
 		this.handleMouseLeave = this.handleMouseLeave.bind(this);
 		this.handleDragStart = this.handleDragStart.bind(this);
-		this.handleDownload = this.handleDownload.bind(this);
 		
 		this.handleClick = this.handleClick.bind(this);
 		this.state = {
@@ -32,29 +30,9 @@ export class CardExpandable extends React.Component {
 			isHovered: "none"
 		};
 	}
-	handleDownload(e){
-
-		var button = new Ext.LinkButton({href: e.highres});
-button.onClick({});
-//delete button;
-
-	
-
-	/*	var link = document.createElement("a");
-		link.download = "";
-		link.setAttribute('Content-Type', 'application/octet-stream');
-		link.setAttribute('Content-Disposition', 'attachment');
-		link.href = e;
-		link.click();
-		document.body.removeChild(link);*/
-	//	window.location.assign(e);
-
-	
-
-	}
 	handleClick(e) {
-		this.props.callbackParent(this.props.itemType, this.props.id);
-	//	this.props.callbackParent(this.props.itemType, this.props.basename);
+		
+		this.props.callbackParent(this.props.itemType, this.props.basename);
 	
 
 	//	window.open(this.props.open_url);
@@ -103,7 +81,7 @@ button.onClick({});
 	}
 	onDateChange(dateValue) {
         // for a date field, the value is passed into the change handler
-		this.props.onCardSelected2(13);
+		this.props.onCardSelected('dateCommenced', dateValue);
 	
     }
 
@@ -112,79 +90,66 @@ button.onClick({});
 		let thumbnail = null;
 		let mediaNode = null;
 		let iconNode = null;
-		let downloadable = null;
 	
 	
 	
 		let mediaType = String(this.props.mediaType);
 		switch (true){
 			case mediaType.startsWith('image'):
-			thumbnail = <Icon link size="big" name="image" />;
-	/*		thumbnail = (
+			thumbnail = (
 				<Image
 					style={{
 						cursor: "zoom-in"
 					}}
 					floated="left"
 					src={this.props.thumbnail}
-					size="tiny"
+					size="mini"
 				/>
-			);*/
-		//	mediaNode = <Image centered src={this.props.highres} />;
-			mediaNode = (		
-			<Image centered src={this.props.highres} controls/>
-		
 			);
+			mediaNode = <Image centered src={this.props.highres} />;
 			break;
 
-			case mediaType.startsWith('video'): 		
+			case mediaType.startsWith('video'): 
+			
 			thumbnail = <Icon link size="big" name="video" />;
-			mediaNode = (
-				<video width="100%" autoPlay controls>
-					<source src={this.props.highres} type="video/mp4" />
-					Your browser does not support HTML5 video.
-				</video>
-			);
+	
+				mediaNode = (
+					<video width="100%" autoPlay controls>
+						<source src={this.props.highres} type="video/mp4" />
+						Your browser does not support HTML5 video.
+					</video>
+				);
+			
 			break;
-
-
 			case mediaType.startsWith('audio'):
-			// EXAMPLE http://localhost:3020/api/1/download?items=LlxBdWRpb1xCYW5kYSBVw5MgLSBMb3VjYSBQYWl4w6NvLm1wMw&preview=true
+		
 				//thumbnail = <Button floated="left" content="Play" icon="play" />;
-			thumbnail = <Icon  size="big" name="volume up" />;
-			mediaNode = (
+				thumbnail = <Icon  size="big" name="volume up" />;
+				mediaNode = (
 					<audio style={{ width: "100%" }} autoPlay controls>
 						<source src={this.props.highres} type="audio/mp3" />
 						Your browser does not support HTML5 audio.
 					</audio>
-			);
-			break;
-
+				)
+				break;
 			default:
 			switch(this.props.itemType) {
-				
 				case "file":
-				thumbnail = <Icon link size="big" name="file"  color="gree" />;
+				thumbnail = <Icon link size="big" name="file" />;
 				mediaNode = (
-					<Button size='small' color='green' onClick={() => this.handleDownload(this.props.highres)}>
-					<Icon name='download' />
-					Open
-				  </Button>
-				);
-				break;
-
-				case "directory":
+					<iframe style={{ width: "100%" }} src={this.props.highres}/>
+				)
+					break;
+				case "folder":
 				thumbnail = <Icon link size="big" name="folder" color="yellow" />;
-				break;
-
+					break;
 				default:
 				thumbnail = <Icon link size="big" name="file" />;
-		
-			
 			}
 	
 	
 			}
+
 
 		
 
@@ -256,9 +221,9 @@ button.onClick({});
 
 		return (
 			<Card
-			
-			onCardSelected2={this.onDateChange.bind(this)}  
+			onCardSelected={this.onDateChange.bind(this)}  
 				link
+				color=""
 				centered
 				draggable="true"
 				onDragStart={this.handleDragStart}
@@ -268,21 +233,18 @@ button.onClick({});
 				style={{ margin: "0px" }}
 				{...this.props}>
 				<Card.Content>
-				<Modal closeIcon="close" trigger={thumbnail} size="tiny">
+					<Modal closeIcon="close" trigger={thumbnail} size="small">
 					<Modal.Header>{this.props.title}</Modal.Header>
-				
 					<Modal.Content>{mediaNode}</Modal.Content>
 					</Modal>
-					
 					<CardsContextMenu
+						formattedItem={this.props.formattedItem}
 						rawItem={this.props.rawItem}
 					
 					/>
 
 					<strong>{this.props.title}</strong>
 					<Card.Meta dangerouslySetInnerHTML={{ __html: this.props.meta }} />
-			
-
 					<Card.Description
 						onClick={this.handleClick}
 						style={{
@@ -293,7 +255,6 @@ button.onClick({});
 							textAlign: "justify"
 						}}>
 						{this.props.description}
-						{downloadable}
 					</Card.Description>
 				</Card.Content>
 			</Card>

@@ -1,14 +1,17 @@
-import React from "react";
-import { render } from "react-dom";
-import { CardsCornerPopup, ModalViewButtons } from "./actions_new";
+//import { CardsCornerPopup, ModalViewButtons } from "./actions";
 
 import {   Dropdown,  Icon,  Button,  Modal } from "semantic-ui-react";
+import download from "./download.js";
+import React from "react";
+import {fetch_getConfig} from "./fetch";
 
-"use strict";
 
+var omSettings = [];
+//var omTemplateId  = null;
+//var omDirectoryId = null;
+//var omPoolId      = null;
+//var omSystemId    = null;
 
-	
-	
    
 //# sourceMappingURL=content.js.map
 
@@ -18,49 +21,90 @@ export class CardsContextMenu extends React.Component {
     super(props);
     this.handleSendToOpenMedia = this.handleSendToOpenMedia.bind(this);
 
-    this.state = {};
+    this.state = {
+      defaults : null,
+    };
   }
 
   
 
   handleDownload(e) {
-    alert("no function defined for Download...")
-    console.log(this.props.rawItem);
+
+    
+      let sUrl = e.highres;
+      download(sUrl);
+      
+    }
+
+  
+
+   onStartedDownload(id) {
+    console.log(`Started downloading: ${id}`);
+  }
+  
+   onFailed(error) {
+    console.log(`Download failed: ${error}`);
   }
 
   handleSendToOpenMedia(e) {
-    var WpLib = OMWebPluginLib;
-    var builder = WpLib.OMPlugin.SamePageBuilder.create();
-    var config = builder.getPluginConfig();
-    var plugin = WpLib.OMPlugin.createPlugin(builder);
-   
 
-    var templateId = 4104;
-    var folderLoId = 4096;
-    var poolId = 3;
-    var systemId = null;
-    var fields = [
-// Now time to set fields
-    WpLib.OMApi.stringField(this.props.rawItem.mainTitle, 8),
-    WpLib.OMApi.stringField(this.props.formattedItem.description, 14),
-    WpLib.OMApi.stringField(null, 15),
-          WpLib.OMApi.intField(1, 5068) //value, field id
-      ];
-      var api = plugin.getApi();
-      api.createDocument(templateId, folderLoId, poolId, systemId)
-          .then(function (docId) {
-    alert("Document successfully created: " + docId.lowId);
-          return api.setFields(docId, fields);
-    
-      })
-          .catch(function (reason) {
-          alert('Action failed');
+		fetch_getConfig().then(
+      function(data) {
+     console.log(data)
+     omSettings.omTemplateId  = data.defaults.templateId;
+     omSettings.omDirectoryId = data.defaults.directoryId;
+     omSettings.omPoolId      = data.defaults.poolId;
+     omSettings.omSystemId    = data.defaults.systemId;
+         console.log(omSettings);
       });
+
+     
+
+        var WpLib = OMWebPluginLib;
+        var OMApi = OMWebPluginLib.OMApi;
+        var builder = WpLib.Plugin.SamePageBuilder.create();
+        var pluginResult = builder.createPluginSafe();
+        if (pluginResult == null)
+            return;
+        var plugin = pluginResult;
+        var config = builder.getPluginConfig();
+
+        var api = plugin.getApi();
+
+
+        var fields = [
+          OMApi.stringField(e.title, 8),                       // Beispiel, um ein Stirng-Feld zu setzen (hier Titel)
+          OMApi.stringField(e.highres, 401),                     //Beispiel, um ein Stirng-Feld zu setzen (hier URL/http-Link)
+      //    OMApi.intField(1, 1015),                                  //Beispiel, um ein Integer-Feld zu setzen (hier Status Feld)
+      //    OMApi.dateTimeField("2018-07-25T10:36:06.0000000Z",5004), //Beispiel, um ein Date-Time zu setzen 
+      //    OMApi.timeSpanField(90000, 1028)                          //Beispiel, um ein TimeSpan-Feld zu setzen (90000 ms => 1:30 min )
+      ];
+
+      console.log("create File");
+    
+      api.createDocumentEx(omSettings.omTemplateId, { lowId: omSettings.omDirectoryId, poolId: omSettings.omPoolId, systemId: omSettings.omSystemId }, fields)
+          .then(function (fileDocument) {
+
+                api.ui.linkToNew(fileDocument)
+            
+         })
+          .catch(function (reason) {
+          console.error(reason);
+          WpLib.Message.isError(reason) && alert(reason.message);
+     
+    });
+
   }
+
 
 
   render() {
     return (
+
+      
+
+ 
+
       <Dropdown
         onClick={e => e.preventDefault()}
         className="icon"
@@ -68,17 +112,23 @@ export class CardsContextMenu extends React.Component {
         style={{ float: "right" }}>
         <Dropdown.Menu style={{ left: "auto", right: 0 }}>
           <Dropdown.Item
-            text="Send to OpenMedia"
+            text="Link to..."
             icon="plus"
-            onClick={this.handleSendToOpenMedia}
+            onClick={() => this.handleSendToOpenMedia(this.props.rawItem)}
           />
           <Dropdown.Item
-            text="Link to..."
+            text="Download"
             icon="share"
-            onClick={this.handleDownload}
-          />
+            download
+            type="application/octet-stream"
+          
+        onClick={() => this.handleDownload(this.props.rawItem)}
+    >
+  
+      </Dropdown.Item>
         </Dropdown.Menu>
       </Dropdown>
+
     );
   }
 }

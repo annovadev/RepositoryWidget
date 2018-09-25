@@ -1,10 +1,39 @@
 {
-    "fetch": {
-        "url": "https://demo.medox.scisys.de:8443/dira6/auth/v10/login",
-        "username": "annova",
-        "password": "Medox124"
-       
-    }
     
+    "defaults"   :      {
+                                    "systemId"      :   null,
+                                    "templateId"    :   4135,
+                                    "directoryId"   :   4107,
+                                    "poolId"        :   4
+
+                             },
+    "fields":           {   
+                                    "title"             :   8,
+                                    "url"               :   401,
+                                    "mimeType"          :   1547
+                             },
+                        
+      
+    "repositories"  : [
+        
+                    {
+                    "url": "http://openmedia24/testwebdavfolder/",
+                    "name": "OM24 Repository",
+                    "autoupdate"    : 20000,
+                    "username"          : "administrator",
+                    "password"      :  "QW5ub3ZhMTI0"
+
+                    },
+
+                    {
+                    "url": "http://openmedia24/temp/",
+                    "name": "OM24 Temp",
+                    "autoupdate"    : 20000,
+                    "username"          : "administrator",
+                    "password"      :  "QW5ub3ZhMTI0"
+                    }
+
+
+                ]
 }
 
