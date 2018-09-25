@@ -3,43 +3,70 @@
         throw new Error('not implemented')
     }
 
-    export type StringKeyValueObject = { [index: string]: string }
+    export namespace Log {
+        export function warn(message: any, ...args: any[]) {
+            console.warn(format([message, ...args]))
+        }
+
+        export function error(message: any, ...args: any[]) {
+            console.error(format([message, ...args]))
+        }
+
+        export function info(message: any, ...args: any[]) {
+            console.info(format([message, ...args]))
+        }
+
+        function format(...args: any[]): string {      //TODO improve formatting
+            const formatted = args.map(x => String(x)).join(' ,')
+            return `OMWebPluginLib: ${formatted}`
+        }
+
+    }
+
+    export type StringKeyValueMap<T> = { [key: string]: T }
+    export type StringStringMap = StringKeyValueMap<string>
+
+    //export type StringKeyValueMap<T> = { [key: string]: T }
+    //export type NumberKeyValueMap<T> = { [key: number]: T }
+
+    //export type ReadonlyStringKeyValueMap<T> = { readonly [key: string]: T }
+    //export type ReadonlyNumberKeyValueMap<T> = { readonly [key: number]: T }
 
     export namespace UrlParams {
         export const Channel = "channel"
         export const PluginConfig = "pluginconfig"
 
-        export const CefChannel = "cef"                 //win client native
-        export const WebPostParentChannel = "parent"    //web post message
-        export const WebPostOpenerChannel = "opener"    //web post message
+        export const WebParentChannel = "parent"    //web post message
+        export const WebOpenerChannel = "opener"    //web post message
+        export const CefChannel = "cef"             //win client native
         /** Channel specifies how are messages transfered between client and plugin.
          * Channel must support both directions.
         */
-        export type Channel = typeof CefChannel | typeof WebPostParentChannel | typeof WebPostOpenerChannel
+        export type Channel = typeof CefChannel | typeof WebParentChannel | typeof WebOpenerChannel
     }
 
     export namespace Message {
-        export const Protocol: string = "omwebplugin"; // current name
+        export const Protocol: string = "omwebplugin"; // identifies webplugin communication protocol
         export const Version: number = 1;              // current version
         export type XMLString = string;
 
-        //export enum RawMessageKind {
-        //    //values starts with one for better bool testing
-        //    notify = 1,
-        //    api = 2
-        //}
-
         export interface IRawMessage {
-            //readonly kind: RawMessageKind;
             readonly protocol: typeof Protocol;
             readonly version: typeof Version;
             readonly payload: {};
-            readonly requestId?: number;        //unique for a plugin instance (managed by channel)
-            readonly responseId?: number;       //unique for a plugin instance (managed by channel)
         }
 
-        export interface IRawPayloadMessage<T extends {}> extends IRawMessage {     //TODO LL T exteds IMessage?
-            readonly payload: T;    //module message or any custom message type
+        //export interface ITypedRawMessage<T> extends IRawMessage {
+        //    readonly payload: T;
+        //}
+
+        export interface IRawReqMessage extends IRawMessage {
+            readonly requestId: number;        //unique for a plugin instance (managed by channel)
+        }
+
+        export interface IRawResMessage extends IRawMessage {
+            readonly responseId: number;       //unique for a plugin instance (managed by channel)
+            readonly isError?: boolean;
         }
 
         export interface IMessage {
@@ -47,48 +74,84 @@
             readonly type: string;
         }
 
-        //export enum MessageKind {
-        //    NotifyMessageKind = 1,
-        //    RequestMessageKind = 2,
-        //    ResponseMessageKind = 3
-        //}
+        export interface IError {
+            message: string;
+            stack?: string;
+            inner?: IError;
+        }
 
-        //export interface IMessageKind {
-        //    readonly kind: MessageKind
-        //}
-        //type IMessageEx = IMessage & IMessageKind
-
-        function isRawMessage(msg: any): msg is IRawMessage {
+        export function isRawMessage(msg: any): msg is IRawMessage {
             const m = msg as IRawMessage
             return typeof m === 'object' && m.protocol === Protocol && typeof m.version === 'number' &&
-                m.version >= Version
+                m.version >= Version && typeof m.payload === 'object'
         }
 
-        export function isRawPayloadMessage(msg: any): msg is IRawPayloadMessage<{}> {
-            return isRawMessage(msg) && typeof (msg as IRawPayloadMessage<{}>).payload === 'object'
+        export function isRequest(msg: IRawMessage): msg is IRawReqMessage {
+            const m = msg as IRawReqMessage
+            return typeof m.requestId === 'number'
         }
 
-        export function isRequest(msg: IRawMessage) {
-            return !!msg.requestId
+        export function isResponse(msg: IRawMessage): msg is IRawResMessage {
+            const m = msg as IRawResMessage
+            return typeof m.responseId === 'number'
         }
 
-        export function isResponse(msg: IRawMessage) {
-            return !!msg.responseId
+        export function isMessage(rawPayload: {}): rawPayload is IMessage {
+            const p = rawPayload as IMessage
+            return typeof p === 'object' && typeof p.module === 'string' && typeof p.type === 'string'
         }
 
-        export function isMessage(payload: {}): payload is IMessage {
-            const p = payload as IMessage
-            return typeof p.module === 'string' && typeof p.type === 'string'
+        export function isError(reason: {}): reason is IError {
+            const e = reason as IError
+            return typeof e === 'object' && typeof e.message === 'string' && !!e.message
         }
     }
 
-    /** Namespace defines common notifications
+    /** OpenMedia types used by library*/
+    export namespace OMTypes {
+        export type ObjectIdBase64 = string;   //object id encoded as base64 string
+
+        export type TemplateId = {
+            readonly lowId: number;
+            readonly systemId: string;
+        }
+
+        export type DocumentId = {
+            readonly lowId: number;
+            readonly poolId: number;
+            readonly systemId: string;
+        }
+
+        export type DocumentContext = {
+            readonly currentDocumentId: DocumentId;
+            readonly parentDocumentId: DocumentId | null;
+            readonly parentRecordId: number | null;
+        }
+        export type Downlink = {
+            readonly docId: DocumentId;
+            readonly templateId: number;
+            readonly templateType: number;
+        }
+    }
+
+    /** Defines common notification messages
      */
-    export namespace OMNotify {
+    export namespace Notify {
         //| 'flashnotes' | 'workflows'
         export namespace Lifecycle {
             export const Module = 'lifecycle'
+            //sent to client after plugin successfully created (sent in next tick)
             export const Ready = 'ready'
+        }
+
+        export namespace View {
+            export const Module = 'view'
+            //scrollWidth and scrollHeight
+            export const ContentSize = 'contentsize'
+            export type ContentSizePayload = {
+                width: number;
+                height: number;
+            }
         }
 
         export namespace Board {
@@ -102,6 +165,14 @@
             export const OK = 'ok'
             export const Cancel = 'cancel'
             export type Type = typeof OK | typeof Cancel
+        }
+
+        export namespace Document {
+            export const Module = 'document'
+            export const SetCurrentDocument = 'setCurrentDocument'
+            export type SetCurrentDocumentPayload = {
+                documentId: OMTypes.DocumentId
+            }
         }
 
         export type NotifyPayload = {}

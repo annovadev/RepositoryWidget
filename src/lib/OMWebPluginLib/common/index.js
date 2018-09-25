@@ -5,72 +5,118 @@ var OMWebPluginLib;
         throw new Error('not implemented');
     }
     OMWebPluginLib.throwNotImplemented = throwNotImplemented;
+    var Log;
+    (function (Log) {
+        function warn(message) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            console.warn(format([message].concat(args)));
+        }
+        Log.warn = warn;
+        function error(message) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            console.error(format([message].concat(args)));
+        }
+        Log.error = error;
+        function info(message) {
+            var args = [];
+            for (var _i = 1; _i < arguments.length; _i++) {
+                args[_i - 1] = arguments[_i];
+            }
+            console.info(format([message].concat(args)));
+        }
+        Log.info = info;
+        function format() {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i] = arguments[_i];
+            }
+            var formatted = args.map(function (x) { return String(x); }).join(' ,');
+            return "OMWebPluginLib: " + formatted;
+        }
+    })(Log = OMWebPluginLib.Log || (OMWebPluginLib.Log = {}));
+    //export type StringKeyValueMap<T> = { [key: string]: T }
+    //export type NumberKeyValueMap<T> = { [key: number]: T }
+    //export type ReadonlyStringKeyValueMap<T> = { readonly [key: string]: T }
+    //export type ReadonlyNumberKeyValueMap<T> = { readonly [key: number]: T }
     var UrlParams;
     (function (UrlParams) {
         UrlParams.Channel = "channel";
         UrlParams.PluginConfig = "pluginconfig";
+        UrlParams.WebParentChannel = "parent"; //web post message
+        UrlParams.WebOpenerChannel = "opener"; //web post message
         UrlParams.CefChannel = "cef"; //win client native
-        UrlParams.WebPostParentChannel = "parent"; //web post message
-        UrlParams.WebPostOpenerChannel = "opener"; //web post message
     })(UrlParams = OMWebPluginLib.UrlParams || (OMWebPluginLib.UrlParams = {}));
     var Message;
     (function (Message) {
-        Message.Protocol = "omwebplugin"; // current name
+        Message.Protocol = "omwebplugin"; // identifies webplugin communication protocol
         Message.Version = 1; // current version
-        //export enum MessageKind {
-        //    NotifyMessageKind = 1,
-        //    RequestMessageKind = 2,
-        //    ResponseMessageKind = 3
-        //}
-        //export interface IMessageKind {
-        //    readonly kind: MessageKind
-        //}
-        //type IMessageEx = IMessage & IMessageKind
         function isRawMessage(msg) {
             var m = msg;
             return typeof m === 'object' && m.protocol === Message.Protocol && typeof m.version === 'number' &&
-                m.version >= Message.Version;
+                m.version >= Message.Version && typeof m.payload === 'object';
         }
-        function isRawPayloadMessage(msg) {
-            return isRawMessage(msg) && typeof msg.payload === 'object';
-        }
-        Message.isRawPayloadMessage = isRawPayloadMessage;
+        Message.isRawMessage = isRawMessage;
         function isRequest(msg) {
-            return !!msg.requestId;
+            var m = msg;
+            return typeof m.requestId === 'number';
         }
         Message.isRequest = isRequest;
         function isResponse(msg) {
-            return !!msg.responseId;
+            var m = msg;
+            return typeof m.responseId === 'number';
         }
         Message.isResponse = isResponse;
-        function isMessage(payload) {
-            var p = payload;
-            return typeof p.module === 'string' && typeof p.type === 'string';
+        function isMessage(rawPayload) {
+            var p = rawPayload;
+            return typeof p === 'object' && typeof p.module === 'string' && typeof p.type === 'string';
         }
         Message.isMessage = isMessage;
+        function isError(reason) {
+            var e = reason;
+            return typeof e === 'object' && typeof e.message === 'string' && !!e.message;
+        }
+        Message.isError = isError;
     })(Message = OMWebPluginLib.Message || (OMWebPluginLib.Message = {}));
-    /** Namespace defines common notifications
+    /** Defines common notification messages
      */
-    var OMNotify;
-    (function (OMNotify) {
+    var Notify;
+    (function (Notify) {
         //| 'flashnotes' | 'workflows'
         var Lifecycle;
         (function (Lifecycle) {
             Lifecycle.Module = 'lifecycle';
+            //sent to client after plugin successfully created (sent in next tick)
             Lifecycle.Ready = 'ready';
-        })(Lifecycle = OMNotify.Lifecycle || (OMNotify.Lifecycle = {}));
+        })(Lifecycle = Notify.Lifecycle || (Notify.Lifecycle = {}));
+        var View;
+        (function (View) {
+            View.Module = 'view';
+            //scrollWidth and scrollHeight
+            View.ContentSize = 'contentsize';
+        })(View = Notify.View || (Notify.View = {}));
         var Board;
         (function (Board) {
             Board.Module = 'board';
             Board.SetWidgetConfig = 'setWidgetConfig';
             Board.SetFederatedSearch = 'setFederatedSearch';
-        })(Board = OMNotify.Board || (OMNotify.Board = {}));
+        })(Board = Notify.Board || (Notify.Board = {}));
         var UserAction;
         (function (UserAction) {
             UserAction.Module = 'useraction';
             UserAction.OK = 'ok';
             UserAction.Cancel = 'cancel';
-        })(UserAction = OMNotify.UserAction || (OMNotify.UserAction = {}));
+        })(UserAction = Notify.UserAction || (Notify.UserAction = {}));
+        var Document;
+        (function (Document) {
+            Document.Module = 'document';
+            Document.SetCurrentDocument = 'setCurrentDocument';
+        })(Document = Notify.Document || (Notify.Document = {}));
         function parsePayload(msg) {
             var json = msg.json;
             if (!json || typeof json !== 'string')
@@ -78,7 +124,7 @@ var OMWebPluginLib;
             var p = JSON.parse(json);
             return typeof p === 'object' ? p : null;
         }
-        OMNotify.parsePayload = parsePayload;
+        Notify.parsePayload = parsePayload;
         //export interface RawNotifyMessage extends Message.IRawPayloadMessage<NotifyMessage> {
         //    readonly kind: Message.RawMessageKind.notify;
         //}
@@ -95,6 +141,6 @@ var OMWebPluginLib;
         //        arg.kind === Message.RawMessageKind.notify &&
         //        !!arg.payload
         //}
-    })(OMNotify = OMWebPluginLib.OMNotify || (OMWebPluginLib.OMNotify = {}));
+    })(Notify = OMWebPluginLib.Notify || (OMWebPluginLib.Notify = {}));
 })(OMWebPluginLib || (OMWebPluginLib = {}));
 //# sourceMappingURL=index.js.map
